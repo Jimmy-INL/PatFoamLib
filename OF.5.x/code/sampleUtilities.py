@@ -12,6 +12,10 @@ __maintainer__ = "Patrick Grover"
 __email__ = ""
 __status__ = "Development"
 
+import sys
+import os
+import SampleLineLib
+
 def getUProfile(modelpath,timestep,profile):
     filePathTemplate = '{0}/postProcessing/sets/{1}/lineL{2}_U.xy'.format(modelpath, timestep, profile)
     if os.path.exists(filePathTemplate) == False:
