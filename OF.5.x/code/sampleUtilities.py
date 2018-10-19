@@ -15,6 +15,48 @@ __status__ = "Development"
 import sys
 import os
 import SampleLineLib
+import SamplePathLib
+import pandas as pd
+
+__density = 1000.
+__mu = 1.e-3
+
+
+def getFlowParametersAlongPath(modelPath, timestep, SamplePathPrefix, params={'k':1, 'nut':2,'omega':3}):
+
+
+    filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}_grad(U).xy'.format(modelPath,
+                                                                                 timestep, SamplePathPrefix)
+    gradUArray = SamplePathLib.read_gradU_path(filePathTemplate)
+
+    filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}_k_omega_nut.xy'.format(modelPath,
+                                                                                 timestep, SamplePathPrefix)
+    turbArray = SamplePathLib.read_turb_path(filePathTemplate, params=params)
+
+    retvalDf = pd.DataFrame()
+
+    retvalDf['dUxdz'] = pd.Series(gradUArray.rZX, index=gradUArray.x)
+    retvalDf['nut'] = pd.Series(turbArray.nut, index=gradUArray.x)
+    retvalDf['k'] = pd.Series(turbArray.k, index=gradUArray.x)
+    retvalDf['omega'] = pd.Series(turbArray.omega, index=gradUArray.x)
+
+    retvalDf['neff'] = retvalDf.apply(lambda row: row['nut']*__density + __mu, axis=1)
+    retvalDf['shear'] = retvalDf.apply(lambda row: row['neff'] * row['dUxdz'], axis=1)
+
+    return retvalDf
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def getUProfile(modelpath,timestep,profile):
     filePathTemplate = '{0}/postProcessing/sets/{1}/lineL{2}_U.xy'.format(modelpath, timestep, profile)

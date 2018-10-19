@@ -43,9 +43,11 @@ class gradU_path(object):
       self.rZZ=[]     
 
       self.x=[]
+
 '''
 ======================= Utilities ============================
 '''
+
 
 def read_turb_path(filePath, starting_param = 1, params={'k':1, 'nut':2,'omega':3}):
     '''
@@ -56,16 +58,17 @@ def read_turb_path(filePath, starting_param = 1, params={'k':1, 'nut':2,'omega':
     #params = os.path.splitext(base)
     #params= params.split('_')
 
-    print(params['omega'])
     fil = open(filePath,'r')
-    retval = turb_line()
+    retval = turb_path()
     for line in fil:
       row = [x.strip(' \t\n\r') for x in line.split(' \t')]
-      retval.y.append(float(row[0]))
+      retval.x.append(float(row[0]))
       retval.k.append(float(row[params['k']]))
       retval.nut.append(float(row[params['nut']]))
       retval.omega.append(float(row[params['omega']]))
     return retval
+
+
 
 '''
 -----------grad.H-------------------------- 
@@ -93,10 +96,10 @@ Variable = X*XX + … ##
 def read_gradU_path(filePath):
     
     fil = open(filePath,'r')
-    retval = r_line()
+    retval = gradU_path()
     for line in fil:
       row = [x.strip(' \t\n\r') for x in line.split(' \t')]
-      retval.y.append(float(row[0]))
+      retval.x.append(float(row[0]))
       retval.rXX.append(float(row[1]))
       retval.rXY.append(float(row[2]))
       retval.rXZ.append(float(row[3]))
