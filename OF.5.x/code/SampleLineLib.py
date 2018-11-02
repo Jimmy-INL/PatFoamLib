@@ -44,9 +44,48 @@ class r_line(object):
       self.rXZ=[]
       self.rYZ=[]
       self.y=[]
+
+class gradU_line(object):
+    def __init__(self):
+      self.rXX=[]
+      self.rXY=[]
+      self.rXZ=[]
+      
+      self.rYX=[]
+      self.rYY=[]
+      self.rYZ=[]
+
+      self.rZX=[]
+      self.rZY=[]
+      self.rZZ=[]     
+
+      self.y=[]
+
 '''
 ======================= Utilities ============================
 '''
+
+def read_gradU_line(filePath):
+    
+    fil = open(filePath,'r')
+    retval = gradU_line()
+    for line in fil:
+      row = [x.strip(' \t\n\r') for x in line.split(' \t')]
+      retval.y.append(float(row[0]))
+      retval.rXX.append(float(row[1]))
+      retval.rXY.append(float(row[2]))
+      retval.rXZ.append(float(row[3]))
+      
+      retval.rYX.append(float(row[4]))
+      retval.rYY.append(float(row[5]))
+      retval.rYZ.append(float(row[6]))
+
+      retval.rZX.append(float(row[7]))
+      retval.rZY.append(float(row[8]))
+      retval.rZZ.append(float(row[9]))
+
+    return retval
+
 
 def read_turb_line(filePath, starting_param = 1, params={'k':1, 'nut':2,'omega':3}):
     '''
