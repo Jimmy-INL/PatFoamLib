@@ -23,26 +23,34 @@ __density = 1000.
 __mu = 1.e-3
 
 
-
-def getFlowParametersAlongLine(modelPath, timestep, SamplePathPrefix, params={'k':1, 'nut':2,'omega':3}, density=1000., mu=1.e-3):
+def getFlowParametersAlongLine(U_path, gradU_path, turb_path, params={'k':1, 'nut':2,'omega':3}, 
+    density=1000., mu=1.e-3):
     
+    # Load up the velocities
+    uArray = SampleLineLib.read_U_line(U_path)
+     
     # Load up the gradient
-    filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}_grad(U).xy'.format(modelPath,
-                                                                                 timestep, SamplePathPrefix)
-    gradUArray = SampleLineLib.read_gradU_line(filePathTemplate)
+    gradUArray = SampleLineLib.read_gradU_line(gradU_path)
     
-    y0 = gradUArray.y[0]    
+    # Load up the turbulent parameters
+    turbArray = SampleLineLib.read_turb_line(turb_path, params=params)
     
-    filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}_k_omega_nut.xy'.format(modelPath,
-                                                                                 timestep, SamplePathPrefix)
-    turbArray = SampleLineLib.read_turb_line(filePathTemplate, params=params)
+    #wss = wss * -1.0 / (1000.*0.5*model['Ubulk']**2.)
+    
     
     retvalDf = pd.DataFrame()
-    retvalDf['dUxdz'] = pd.Series(gradUArray.rZX, index=gradUArray.y)
+    retvalDf['Ux'] = pd.Series(uArray.uX, uArray.y)
+    retvalDf['Uy'] = pd.Series(uArray.uY, uArray.y)
+    retvalDf['Uz'] = pd.Series(uArray.uZ, uArray.y)
+    retvalDf['dUxdz'] = pd.Series(gradUArray.rYX, index=gradUArray.y)
     retvalDf['nut'] = pd.Series(turbArray.nut, index=gradUArray.y)
     retvalDf['k'] = pd.Series(turbArray.k, index=gradUArray.y)
     retvalDf['omega'] = pd.Series(turbArray.omega, index=gradUArray.y)
     retvalDf['yref'] = pd.Series(gradUArray.y, index=gradUArray.y)    
+    
+    # Extract the bottom elevation - note that this will change depending on where the 
+    # sample was extracted - currently set for the cell face. 
+    y0 = gradUArray.y[0]    
     retvalDf['yref'] = retvalDf.apply(lambda row: row['yref'] - y0, axis=1)
 
     
@@ -56,26 +64,23 @@ def getFlowParametersAlongLine(modelPath, timestep, SamplePathPrefix, params={'k
     retvalDf['nueffdudy'] = retvalDf.apply(lambda row: (mu + density*row['nut'])*row['dUxdz'], axis=1)
 
     tau_bed = retvalDf.iloc[0].nueffdudy
-    ustar = math.sqrt(tau_bed/density)
+    print(tau_bed)
+    ustar = math.sqrt(abs(tau_bed)/density)
     
     retvalDf['yplus'] = retvalDf.apply(lambda row: ustar*row['yref']/(mu/density), axis=1)
     
     return retvalDf
     
+    
+    
 
 '''
 This gets the flow parameters along a path (in the x-dir)
 '''
-def getFlowParametersAlongPath(modelPath, timestep, SamplePathPrefix, params={'k':1, 'nut':2,'omega':3}, density=1000., mu=1.e-3):
-
-
-    filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}_grad(U).xy'.format(modelPath,
-                                                                                 timestep, SamplePathPrefix)
-    gradUArray = SamplePathLib.read_gradU_path(filePathTemplate)
-
-    filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}_k_omega_nut.xy'.format(modelPath,
-                                                                                 timestep, SamplePathPrefix)
-    turbArray = SamplePathLib.read_turb_path(filePathTemplate, params=params)
+def getFlowParametersAlongPath(gradU_path, turb_path, params={'k':1, 'nut':2,'omega':3}, density=1000., mu=1.e-3):                                                                                 
+                                                                                 
+    gradUArray = SamplePathLib.read_gradU_path(gradU_path)    
+    turbArray = SamplePathLib.read_turb_path(turb_path, params=params)
 
     retvalDf = pd.DataFrame()
     
@@ -90,23 +95,25 @@ def getFlowParametersAlongPath(modelPath, timestep, SamplePathPrefix, params={'k
     return retvalDf
 
 
-def getUProfile(modelpath,timestep,profile):
-    filePathTemplate = '{0}/postProcessing/sets/{1}/lineL{2}_U.xy'.format(modelpath, timestep, profile)
+def getUProfile(modelpath, timestep,profile, prefix='lineL'):
+    filePathTemplate = '{0}/postProcessing/sets/{1}/{2}{3}_U.xy'.format(modelpath, timestep, prefix, profile)
     if os.path.exists(filePathTemplate) == False:
-        filePathTemplate = '{0}/postProcessing/sampleDict/{1}/lineL{2}_U.xy'.format(modelpath, timestep, profile)
+        filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}{3}_U.xy'.format(modelpath, timestep, prefix, profile)
     
     modelResult = SampleLineLib.read_U_line(filePathTemplate)
     return modelResult
+    
 
-def getRProfile(modelpath,timestep,profile):
-    filePathTemplate = '{0}/postProcessing/sets/{1}/lineL{2}_R.xy'.format(modelpath, timestep, profile)
+
+def getRProfile(modelpath,timestep,profile,prefix='lineL'):
+    filePathTemplate = '{0}/postProcessing/sets/{1}/{2}{3}_R.xy'.format(modelpath, timestep, prefix, profile)
     if os.path.exists(filePathTemplate) == False:
-        filePathTemplate = '{0}/postProcessing/sampleDict/{1}/lineL{2}_R.xy'.format(modelpath, timestep, profile)
+        filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}{3}_R.xy'.format(modelpath, timestep, prefix, profile)
     
     if os.path.exists(filePathTemplate) == False:
-        filePathTemplate = '{0}/postProcessing/sets/{1}/lineL{2}_turbulenceProperties:R.xy'.format(modelpath, timestep, profile)
+        filePathTemplate = '{0}/postProcessing/sets/{1}/{2}{3}_turbulenceProperties:R.xy'.format(modelpath, timestep, prefix, profile)
         if os.path.exists(filePathTemplate) == False:
-            filePathTemplate = '{0}/postProcessing/sampleDict/{1}/lineL{2}_turbulenceProperties:R.xy'.format(modelpath, timestep, profile)
+            filePathTemplate = '{0}/postProcessing/sampleDict/{1}/{2}{3}_turbulenceProperties:R.xy'.format(modelpath, timestep, prefix, profile)
     
     modelResult = SampleLineLib.read_reynolds_line(filePathTemplate)
     return modelResult
