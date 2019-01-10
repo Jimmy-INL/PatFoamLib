@@ -24,7 +24,7 @@ __mu = 1.e-3
 
 
 def getFlowParametersAlongLine(U_path, gradU_path, turb_path, params={'k':1, 'nut':2,'omega':3}, 
-    density=1000., mu=1.e-3):
+    density=1000., mu=1.e-3, grad='rYX'):
     
     # Load up the velocities
     uArray = SampleLineLib.read_U_line(U_path)
@@ -42,7 +42,12 @@ def getFlowParametersAlongLine(U_path, gradU_path, turb_path, params={'k':1, 'nu
     retvalDf['Ux'] = pd.Series(uArray.uX, uArray.y)
     retvalDf['Uy'] = pd.Series(uArray.uY, uArray.y)
     retvalDf['Uz'] = pd.Series(uArray.uZ, uArray.y)
-    retvalDf['dUxdz'] = pd.Series(gradUArray.rYX, index=gradUArray.y)
+    if grad=='rYX':
+        retvalDf['dUxdz'] = pd.Series(gradUArray.rYX, index=gradUArray.y)
+    elif grad=='rZX':
+        retvalDf['dUxdz'] = pd.Series(gradUArray.rZX, index=gradUArray.y)
+    else:
+         raise Exception('grad should be either rYX or rZX: {}'.format(x))
     retvalDf['nut'] = pd.Series(turbArray.nut, index=gradUArray.y)
     retvalDf['k'] = pd.Series(turbArray.k, index=gradUArray.y)
     retvalDf['omega'] = pd.Series(turbArray.omega, index=gradUArray.y)
