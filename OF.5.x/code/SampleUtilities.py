@@ -24,7 +24,7 @@ __mu = 1.e-3
 
 
 def getFlowParametersAlongLine(U_path, gradU_path, turb_path, params={'k':1, 'nut':2,'omega':3}, 
-    density=1000., mu=1.e-3, grad='rYX'):
+    density=1000., mu=1.e-3, grad='rYX', base_elevation=None):
     
     # Load up the velocities
     uArray = SampleLineLib.read_U_line(U_path)
@@ -55,7 +55,10 @@ def getFlowParametersAlongLine(U_path, gradU_path, turb_path, params={'k':1, 'nu
     
     # Extract the bottom elevation - note that this will change depending on where the 
     # sample was extracted - currently set for the cell face. 
-    y0 = gradUArray.y[0]    
+    if base_elevation is None:
+        y0 = gradUArray.y[0]    
+    else:
+        y0 = base_elevation
     retvalDf['yref'] = retvalDf.apply(lambda row: row['yref'] - y0, axis=1)
 
     
