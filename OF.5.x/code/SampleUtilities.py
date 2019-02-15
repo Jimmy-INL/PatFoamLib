@@ -72,7 +72,6 @@ def getFlowParametersAlongLine(U_path, gradU_path, turb_path, params={'k':1, 'nu
     retvalDf['nueffdudy'] = retvalDf.apply(lambda row: (mu + density*row['nut'])*row['dUxdz'], axis=1)
 
     tau_bed = retvalDf.iloc[0].nueffdudy
-    print(tau_bed)
     ustar = math.sqrt(abs(tau_bed)/density)
     
     retvalDf['yplus'] = retvalDf.apply(lambda row: ustar*row['yref']/(mu/density), axis=1)
